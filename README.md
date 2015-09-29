@@ -21,10 +21,13 @@
    - `geoBoundingBox(lat, lon, distance)` - return bounding box geohash for given point around distance
    - `geoHashEncode(lat, lon, len)` - return geohash for given coordinate, len defines number of bytesin geohash
    - `geoHashDecode(hash)` - return coordinates for given geohash
-   - `geoHashAdjacent()`
-   - `geoHashGrid()`
-   - `geoHashRow()`
-
+   - `geoHashAdjacent(geohash, dir)` - return adjacent boxes for the given base in the given direction, dir is one of top,left,right,bottom
+   - `geoHashGrid(geoshash, steps)` - return grid of all neighboring boxes around the center, steps defines how many boxes in each direction from the center. With steps = 1 the returned matrix is 3x3
+   - `geoHashRow(geohash, steps)` - same as grid but returns only one row, i.e. left of right of the center
+ - `initBusy(ms)` - setup busy monitor to track if incoming requests processing takes longer than given period in milliseconds
+ - `isBusy()` - return true if currently request processing takes longer than configured interval
+ - `getBusy()` - returns current lag for processing requests
+ 
 # Author 
 
 Vlad Seryakov
