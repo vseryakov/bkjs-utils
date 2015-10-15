@@ -5,7 +5,6 @@
 
 #include "bkjs.h"
 #include "bklib.h"
-#include "bklog.h"
 #include "snappy.h"
 #include "bkzip.h"
 #include "bkunzip.h"
@@ -58,26 +57,6 @@ static NAN_METHOD(isBusy)
 static NAN_METHOD(getBusy)
 {
     NAN_RETURN(_currentLag);
-}
-
-static NAN_METHOD(logging)
-{
-    if (info.Length() > 0) {
-        Nan::Utf8String level(info[0]);
-        bkLog::set(*level);
-    }
-
-    NAN_RETURN(Nan::New(bkLog::level()));
-}
-
-static NAN_METHOD(loggingChannel)
-{
-    if (info.Length() > 0) {
-        Nan::Utf8String name(info[0]);
-        bkLog::setChannel(!strcmp(*name, "stderr") ? stderr : NULL);
-    }
-    FILE *fp = bkLog::getChannel();
-    NAN_RETURN(Nan::New(fp == stderr ? "stderr" : "stdout").ToLocalChecked());
 }
 
 string stringifyJSON(Local<Value> obj)
@@ -147,7 +126,7 @@ static NAN_METHOD(getUser)
    if (info.Length() > 0) {
        Nan::Utf8String name(info[0]->ToString());
        pw = getpwnam(*name);
-       if (!pw && strNumeric(*name)) pw = getpwuid(info[0]->ToInteger()->Int32Value());
+       if (!pw && bkStrNumeric(*name)) pw = getpwuid(info[0]->ToInteger()->Int32Value());
    } else {
        pw = getpwnam(getlogin());
    }
@@ -168,7 +147,7 @@ static NAN_METHOD(getGroup)
    if (info.Length() > 0) {
        Nan::Utf8String name(info[0]->ToString());
        g = getgrnam(*name);
-       if (!g && strNumeric(*name)) g = getgrgid(info[0]->ToInteger()->Int32Value());
+       if (!g && bkStrNumeric(*name)) g = getgrgid(info[0]->ToInteger()->Int32Value());
    } else {
        struct passwd *pw = getpwnam(getlogin());
        g = getgrgid(pw ? pw->pw_gid : 0);
@@ -449,7 +428,7 @@ static NAN_METHOD(strSplit)
    NAN_OPTIONAL_ARGUMENT_STRING(1, delim);
    NAN_OPTIONAL_ARGUMENT_STRING(2, quotes);
 
-   vector<string> list = strSplit(*str, *delim, *quotes);
+   vector<string> list = bkStrSplit(*str, *delim, *quotes);
    info.GetReturnValue().Set(toArray(list));
 }
 
@@ -484,9 +463,6 @@ void UtilsInit(Handle<Object> target)
 
     NAN_EXPORT(target, getUser);
     NAN_EXPORT(target, getGroup);
-
-    NAN_EXPORT(target, logging);
-    NAN_EXPORT(target, loggingChannel);
 
     NAN_EXPORT(target, countWordsInit);
     NAN_EXPORT(target, countWords);

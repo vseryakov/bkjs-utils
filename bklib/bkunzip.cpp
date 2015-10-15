@@ -5,7 +5,6 @@
  */
 
 #include "bklib.h"
-#include "bklog.h"
 #include "bkunzip.h"
 
 #define UNZ_BUFSIZE                 16384

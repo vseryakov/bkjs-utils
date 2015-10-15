@@ -25,7 +25,6 @@
       ],
       "sources": [
         "binding.cpp",
-        "bklib/bklog.cpp",
         "bklib/bklib.cpp",
         "bklib/bkzip.cpp",
         "bklib/bkunzip.cpp",

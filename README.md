@@ -1,10 +1,8 @@
 # Utilities module for node and backendjs
 
 # Usage
- - `splitArray(str)` - split a string into an array separated by commas, supports double quotes
- - `logging([level])` - set or return logging level, this is internal C++ logging facility
- - `loggingChannel(channelname)` - redirect logging into stdout or stderr, this is internal C++ logging
- - `countWords(word, text)` - return how many time word appers in the text, uses Knuth-Morris-Pratt algorithm
+ - `splitArray(str)` - split a string into an array separated by commas, supports quoted strings
+ - `countWords(word, text)` - return how many time word appears in the text, uses Knuth-Morris-Pratt algorithm
  - `countAllWords(list, text)` - return an object with counters for each word from the list, i.e. how many times each word appears in the text, uses Aho-Corasick algorithm
  - `countWordsInit()` - clears word counting cache
  - `snappyCompress(str)` - compress a string
