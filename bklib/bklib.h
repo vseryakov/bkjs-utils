@@ -220,6 +220,7 @@ bool bkMakePath(string path);
 // Fast hashing routines
 uint32_t bkHash(const uint8_t *buf, int size);
 uint32_t bkHash2(const uint8_t *buf, int size, uint32_t seed = 0);
+uint32_t bkHash3(const uint8_t *buf, int size, uint32_t seed = 0);
 uint32_t bkCrc32(const void *data, int size);
 
 void bkSetFileTime(string file, int64_t t);

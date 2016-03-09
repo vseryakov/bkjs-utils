@@ -512,6 +512,37 @@ uint32_t bkHash2(const uint8_t *buf, int size, uint32_t seed)
     return h1;
 }
 
+uint32_t bkHash3(const uint8_t* buf, int size, uint32_t seed)
+{
+    const uint32_t m = 0xc6a4a793;
+    const uint32_t r = 24;
+    const uint8_t *limit = buf + size;
+    uint32_t h = seed ^ (size * m);
+
+    while (buf + 4 <= limit) {
+        uint32_t w = ((static_cast<uint32_t>(static_cast<unsigned char>(buf[0])))
+                | (static_cast<uint32_t>(static_cast<unsigned char>(buf[1])) << 8)
+                | (static_cast<uint32_t>(static_cast<unsigned char>(buf[2])) << 16)
+                | (static_cast<uint32_t>(static_cast<unsigned char>(buf[3])) << 24));
+        buf += 4;
+        h += w;
+        h *= m;
+        h ^= (h >> 16);
+    }
+    switch (limit - buf) {
+    case 3:
+        h += buf[2] << 16;
+    case 2:
+        h += buf[1] << 8;
+    case 1:
+        h += buf[0];
+        h *= m;
+        h ^= (h >> r);
+        break;
+    }
+    return h;
+}
+
 long long bkClock()
 {
     struct timeval tv;
@@ -1443,3 +1474,4 @@ vector< vector<string> > bkGeoHashGrid(string center, int steps)
     }
     return rc;
 }
+

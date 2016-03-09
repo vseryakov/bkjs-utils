@@ -160,6 +160,14 @@ static NAN_METHOD(getGroup)
    info.GetReturnValue().Set(obj);
 }
 
+static vector<bkAhoCorasick*> _wc;
+
+static NAN_METHOD(countWordsInit)
+{
+    for (uint i = 0; i < _wc.size(); i++) delete _wc[i];
+    _wc.clear();
+}
+
 static NAN_METHOD(countWords)
 {
     HandleScope scope;
@@ -168,14 +176,6 @@ static NAN_METHOD(countWords)
     NAN_REQUIRE_ARGUMENT_AS_STRING(1, text);
 
     NAN_RETURN(Nan::New(bkCountWords(*word, *text)));
-}
-
-static vector<bkAhoCorasick*> _wc;
-
-static NAN_METHOD(countWordsInit)
-{
-    for (uint i = 0; i < _wc.size(); i++) delete _wc[i];
-    _wc.clear();
 }
 
 static NAN_METHOD(countAllWords)
