@@ -427,8 +427,9 @@ static NAN_METHOD(strSplit)
    NAN_OPTIONAL_ARGUMENT_STRING(0, str);
    NAN_OPTIONAL_ARGUMENT_STRING(1, delim);
    NAN_OPTIONAL_ARGUMENT_STRING(2, quotes);
+   NAN_OPTIONAL_ARGUMENT_BOOL(3, empty);
 
-   vector<string> list = bkStrSplit(*str, *delim, *quotes);
+   vector<string> list = bkStrSplit(*str, *delim, *quotes, empty);
    info.GetReturnValue().Set(toArray(list));
 }
 

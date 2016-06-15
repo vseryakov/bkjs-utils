@@ -757,14 +757,21 @@ bool bkStrEqual(const string &a, const string &b)
     return true;
 }
 
-vector<string> bkStrSplit(const string str, const string delim, const string quotes)
+vector<string> bkStrSplit(const string str, const string delim, const string quotes, bool keepempty)
 {
     vector<string> rc;
     string::size_type i = 0, j = 0, q = string::npos;
     const string::size_type len = str.length();
 
     while (i < len) {
-        i = str.find_first_not_of(delim, i);
+        if (keepempty) {
+            while (delim.find(str[i]) != string::npos) {
+                rc.push_back("");
+                i++;
+            }
+        } else {
+            i = str.find_first_not_of(delim, i);
+        }
         if (i == string::npos) break;
         // Opening quote
         if (quotes.find(str[i]) != string::npos) {
