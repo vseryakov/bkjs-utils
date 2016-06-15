@@ -760,15 +760,17 @@ bool bkStrEqual(const string &a, const string &b)
 vector<string> bkStrSplit(const string str, const string delim, const string quotes, bool keepempty)
 {
     vector<string> rc;
-    string::size_type i = 0, j = 0, q = string::npos;
+    string::size_type i = 0, j, q;
     const string::size_type len = str.length();
 
     while (i < len) {
+        q = string::npos;
         if (keepempty) {
-            while (delim.find(str[i]) != string::npos) {
+            while (i < len && delim.find(str[i]) != string::npos) {
                 rc.push_back("");
                 i++;
             }
+            if (i >= len) i = string::npos;
         } else {
             i = str.find_first_not_of(delim, i);
         }
@@ -782,17 +784,23 @@ vector<string> bkStrSplit(const string str, const string delim, const string quo
                 if (q == string::npos || str[q - 1] != '\\') break;
                 q++;
             }
+            if (q != string::npos) {
+                rc.push_back(str.substr(i, q - i));
+                j = str.find_first_of(delim, q);
+                if (j == string::npos) break;
+                i = j + 1;
+                continue;
+            }
         }
         // End of the word
         j = str.find_first_of(delim, i);
         if (j == string::npos) {
-            rc.push_back(str.substr(i, q != string::npos ? q - i : str.size() - i));
+            rc.push_back(str.substr(i, len - i));
             break;
         } else {
-            rc.push_back(str.substr(i, q != string::npos ? q - i : j - i));
+            rc.push_back(str.substr(i, j - i));
         }
-        i = q != string::npos ? q + 1 : j + 1;
-        q = string::npos;
+        i = j + 1;
     }
     return rc;
 }
