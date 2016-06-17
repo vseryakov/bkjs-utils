@@ -16,6 +16,7 @@ static uv_timer_t _busyTimer;
 static uint32_t _currentLag;
 static uint64_t _lastMark;
 
+// Based on the https://github.com/lloyd/node-toobusy
 static void busy_timer(uv_timer_t* handle, int status)
 {
     uint64_t now = uv_hrtime();
