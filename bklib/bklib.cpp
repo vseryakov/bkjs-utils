@@ -785,7 +785,7 @@ vector<string> bkStrSplit(const string str, const string delim, const string quo
                 q++;
             }
             if (q != string::npos) {
-                rc.push_back(str.substr(i, q - i));
+                if (keepempty || q - i > 0) rc.push_back(str.substr(i, q - i));
                 j = str.find_first_of(delim, q);
                 if (j == string::npos) break;
                 i = j + 1;
@@ -795,10 +795,10 @@ vector<string> bkStrSplit(const string str, const string delim, const string quo
         // End of the word
         j = str.find_first_of(delim, i);
         if (j == string::npos) {
-            rc.push_back(str.substr(i, len - i));
+            if (keepempty || len - i > 0) rc.push_back(str.substr(i, len - i));
             break;
         } else {
-            rc.push_back(str.substr(i, j - i));
+            if (keepempty || j - i > 0) rc.push_back(str.substr(i, j - i));
         }
         i = j + 1;
     }
