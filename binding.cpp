@@ -17,7 +17,7 @@ static uint32_t _currentLag;
 static uint64_t _lastMark;
 
 // Based on the https://github.com/lloyd/node-toobusy
-static void busy_timer(uv_timer_t* handle, int status)
+static void busy_timer(uv_timer_t* handle)
 {
     uint64_t now = uv_hrtime();
 
@@ -38,7 +38,7 @@ static NAN_METHOD(initBusy)
 
     if ((long long)_busyTimer.data != 1970) {
         uv_timer_init(uv_default_loop(), &_busyTimer);
-        uv_timer_start(&_busyTimer, busy_timer, POLL_PERIOD_MS, POLL_PERIOD_MS);
+        uv_timer_start(&_busyTimer, (uv_timer_cb)busy_timer, POLL_PERIOD_MS, POLL_PERIOD_MS);
         _busyTimer.data = (void*)1970;
     }
     NAN_RETURN(HIGH_WATER_MARK_MS);
@@ -60,66 +60,6 @@ static NAN_METHOD(getBusy)
     NAN_RETURN(_currentLag);
 }
 
-string stringifyJSON(Local<Value> obj)
-{
-    Nan::EscapableHandleScope scope;
-    Local<Value> argv[1] = { obj };
-    Handle<Object> JSON = Context::GetCurrent()->Global()->Get(Nan::New("JSON").ToLocalChecked())->ToObject();
-    Handle<Function> JSON_stringify = Handle<Function>::Cast(JSON->Get(Nan::New("stringify").ToLocalChecked()));
-    Local<Value> val = Local<Value>::New(JSON_stringify->Call(JSON, 1, argv));
-    Nan::Utf8String json(val);
-    return *json;
-}
-
-Handle<Value> parseJSON(const char* str)
-{
-    Nan::EscapableHandleScope scope;
-    Local<Value> argv[1] = { Nan::New(str).ToLocalChecked() };
-    Handle<Object> JSON = Context::GetCurrent()->Global()->Get(Nan::New("JSON").ToLocalChecked())->ToObject();
-    Handle<Function> JSON_parse = Handle<Function>::Cast(JSON->Get(Nan::New("parse").ToLocalChecked()));
-    Local<Value> val;
-    {
-        Nan::TryCatch try_catch;
-        val = Local<Value>::New(JSON_parse->Call(JSON, 1, argv));
-        if (try_catch.HasCaught()) val = Local<Value>::New(Null());
-    }
-    return scope.Escape(val);
-}
-
-Local<Value> toArray(vector<string> &list, int numeric)
-{
-    Nan::EscapableHandleScope scope;
-    Local<Array> rc = Local<Array>::New(Array::New(list.size()));
-    for (uint i = 0; i < list.size(); i++) {
-        switch (numeric) {
-        case 1:
-            rc->Set(Nan::New(i), Nan::New(::atof(list[i].c_str())));
-            break;
-
-        case 2:
-            rc->Set(Nan::New(i), Nan::New(::atof(list[i].c_str())));
-            break;
-
-        default:
-            rc->Set(Nan::New(i), Nan::New(list[i].c_str()).ToLocalChecked());
-        }
-    }
-    return scope.Escape(rc);
-}
-
-Local<Value> toArray(vector<pair<string,string> > &list)
-{
-    Nan::EscapableHandleScope scope;
-    Local<Array> rc = Local<Array>::New(Array::New(list.size()));
-    for (uint i = 0; i < list.size(); i++) {
-        Local<Object> obj = Local<Object>::New(Object::New());
-        obj->Set(Nan::New("name").ToLocalChecked(), Nan::New(list[i].first.c_str()).ToLocalChecked());
-        obj->Set(Nan::New("value").ToLocalChecked(), Nan::New(list[i].second.c_str()).ToLocalChecked());
-        rc->Set(Nan::New(i), obj);
-    }
-    return scope.Escape(rc);
-}
-
 static NAN_METHOD(getUser)
 {
    struct passwd *pw = NULL;
@@ -131,14 +71,14 @@ static NAN_METHOD(getUser)
    } else {
        pw = getpwnam(getlogin());
    }
-   Local<Object> obj = Local<Object>::New(Object::New());
+   Local<Object> obj = Nan::New<Object>();
    if (pw) {
        obj->Set(Nan::New("uid").ToLocalChecked(), Nan::New(pw->pw_uid));
        obj->Set(Nan::New("gid").ToLocalChecked(), Nan::New(pw->pw_gid));
        obj->Set(Nan::New("name").ToLocalChecked(), Nan::New(pw->pw_name).ToLocalChecked());
        obj->Set(Nan::New("dir").ToLocalChecked(), Nan::New(pw->pw_dir).ToLocalChecked());
    }
-   info.GetReturnValue().Set(obj);
+   NAN_RETURN(obj);
 }
 
 static NAN_METHOD(getGroup)
@@ -153,12 +93,12 @@ static NAN_METHOD(getGroup)
        struct passwd *pw = getpwnam(getlogin());
        g = getgrgid(pw ? pw->pw_gid : 0);
    }
-   Local<Object> obj = Local<Object>::New(Object::New());
+   Local<Object> obj = Nan::New<Object>();
    if (g) {
        obj->Set(Nan::New("gid").ToLocalChecked(), Nan::New(g->gr_gid));
        obj->Set(Nan::New("name").ToLocalChecked(), Nan::New(g->gr_name).ToLocalChecked());
    }
-   info.GetReturnValue().Set(obj);
+   NAN_RETURN(obj);
 }
 
 static vector<bkAhoCorasick*> _wc;
@@ -171,8 +111,6 @@ static NAN_METHOD(countWordsInit)
 
 static NAN_METHOD(countWords)
 {
-    HandleScope scope;
-
     NAN_REQUIRE_ARGUMENT_AS_STRING(0, word);
     NAN_REQUIRE_ARGUMENT_AS_STRING(1, text);
 
@@ -201,18 +139,18 @@ static NAN_METHOD(countAllWords)
 
     // Additional delimiters
     if (info.Length() > 3 && !info[3]->IsNull()) {
-        String::AsciiValue str(info[3]);
+        Nan::Utf8String str(info[3]);
         cw->setAlphabet(*str, str.length(), true);
     }
     // Additional non-delimiters
     if (info.Length() > 4 && !info[4]->IsNull()) {
-        String::AsciiValue str(info[4]);
+        Nan::Utf8String str(info[4]);
         cw->setAlphabet(*str, str.length(), false);
     }
 
     // Op mode
     if (info.Length() > 5 && !info[5]->IsNull()) {
-        String::AsciiValue str(info[5]);
+        Nan::Utf8String str(info[5]);
         cw->setMode(*str);
     }
 
@@ -230,9 +168,9 @@ static NAN_METHOD(countAllWords)
     }
 
     cw->search(*text);
-    list = Array::New();
-    Local<Array> counters = Local<Array>::New(Array::New());
-    Local<Array> values = Local<Array>::New(Array::New());
+    list = Nan::New<Array>();
+    Local<Array> counters = Nan::New<Array>();
+    Local<Array> values = Nan::New<Array>();
     for (uint i = 0, j = 0; i < cw->counters.size(); i++) {
         if (cw->counters[i]) {
             string w = cw->list[i].word;
@@ -242,7 +180,7 @@ static NAN_METHOD(countAllWords)
             values->Set(Nan::New(j++), Nan::New(cw->list[i].value));
         }
     }
-    Local<Object> obj = Object::New();
+    Local<Object> obj = Nan::New<Object>();
     obj->Set(Nan::New("count").ToLocalChecked(), Nan::New(cw->count));
     obj->Set(Nan::New("value").ToLocalChecked(), Nan::New(cw->value));
     obj->Set(Nan::New("mode").ToLocalChecked(), Nan::New(cw->modeName().c_str()).ToLocalChecked());
@@ -250,7 +188,7 @@ static NAN_METHOD(countAllWords)
     obj->Set(Nan::New("counters").ToLocalChecked(), counters);
     obj->Set(Nan::New("values").ToLocalChecked(), values);
 
-    info.GetReturnValue().Set(obj);
+    NAN_RETURN(obj);
 }
 
 static NAN_METHOD(geoHashEncode)
@@ -260,7 +198,7 @@ static NAN_METHOD(geoHashEncode)
    NAN_OPTIONAL_ARGUMENT_INT(2, len);
 
    string hash = bkGeoHashEncode(lat, lon, len);
-   NAN_RETURN(Nan::New(hash.c_str()).ToLocalChecked());
+   NAN_RETURN(Nan::New(hash).ToLocalChecked());
 }
 
 static NAN_METHOD(geoHashDecode)
@@ -268,7 +206,7 @@ static NAN_METHOD(geoHashDecode)
    NAN_REQUIRE_ARGUMENT_AS_STRING(0, hash);
 
    vector<double> rc = bkGeoHashDecode(*hash);
-   Local<Array> result = Local<Array>::New(Array::New(rc.size()));
+   Local<Array> result = Nan::New<Array>(rc.size());
    for (uint i = 0; i < rc.size(); i++) {
        result->Set(Nan::New(i), Nan::New(rc[i]));
    }
@@ -281,7 +219,7 @@ static NAN_METHOD(geoHashAdjacent)
    NAN_REQUIRE_ARGUMENT_STRING(1, dir);
 
    string hash = bkGeoHashAdjacent(*base, *dir);
-   NAN_RETURN(Nan::New(hash.c_str()).ToLocalChecked());
+   NAN_RETURN(Nan::New(hash).ToLocalChecked());
 }
 
 static bool isNumber(Local<Value> arg)
@@ -317,7 +255,7 @@ static NAN_METHOD(geoBoundingBox)
    NAN_REQUIRE_ARGUMENT_NUMBER(2, distance);
 
    vector<double> rc = bkBoundingBox(lat1, lon1, distance);
-   Local<Array> result = Local<Array>::New(Array::New(rc.size()));
+   Local<Array> result = Nan::New<Array>(rc.size());
    for (uint i = 0; i < rc.size(); i++) {
        result->Set(Nan::New(i), Nan::New(rc[i]));
    }
@@ -331,10 +269,10 @@ static NAN_METHOD(geoHashGrid)
    if (steps <= 0) steps = 1;
 
    vector< vector<string> > rc = bkGeoHashGrid(*base, steps);
-   Local<Array> result = Local<Array>::New(Array::New());
+   Local<Array> result = Nan::New<Array>();
    for (uint j = 0, n = 0; j < rc[0].size(); j++) {
        for (uint i = 0; i < rc.size(); i++) {
-           result->Set(Nan::New(n++), Nan::New(rc[i][j].c_str()).ToLocalChecked());
+           result->Set(Nan::New(n++), Nan::New(rc[i][j]).ToLocalChecked());
        }
    }
    NAN_RETURN(result);
@@ -347,9 +285,9 @@ static NAN_METHOD(geoHashRow)
    if (steps <= 0) steps = 1;
 
    vector<string> rc = bkGeoHashRow(*base, steps);
-   Local<Array> result = Local<Array>::New(Array::New(rc.size()));
+   Local<Array> result = Nan::New<Array>(rc.size());
    for (uint i = 0; i < rc.size(); i++) {
-       result->Set(Nan::New(i), Nan::New(rc[i].c_str()).ToLocalChecked());
+       result->Set(Nan::New(i), Nan::New(rc[i]).ToLocalChecked());
    }
    NAN_RETURN(result);
 }
@@ -360,7 +298,7 @@ static NAN_METHOD(snappyCompress)
 
    string out;
    snappy::Compress(*str, str.length(), &out);
-   info.GetReturnValue().Set(Nan::New(out.c_str(), out.size()).ToLocalChecked());
+   NAN_RETURN(Nan::New(out.c_str(), out.size()).ToLocalChecked());
 }
 
 static NAN_METHOD(snappyUncompress)
@@ -369,7 +307,7 @@ static NAN_METHOD(snappyUncompress)
 
    string out;
    snappy::Uncompress(*str, str.length(), &out);
-   info.GetReturnValue().Set(Nan::New(out.c_str(), out.size()).ToLocalChecked());
+   NAN_RETURN(Nan::New(out.c_str(), out.size()).ToLocalChecked());
 }
 
 static NAN_METHOD(zlibCompress)
@@ -382,7 +320,7 @@ static NAN_METHOD(zlibCompress)
    bkDeflateInit(&strm, level ? level : Z_BEST_SPEED);
    bkDeflate(&strm, *str, str.length(), &out);
    bkDeflateEnd(&strm, &out);
-   info.GetReturnValue().Set(Nan::New(out.c_str(), out.size()).ToLocalChecked());
+   NAN_RETURN(Nan::New(out.c_str(), out.size()).ToLocalChecked());
 }
 
 static NAN_METHOD(zlibUncompress)
@@ -394,24 +332,22 @@ static NAN_METHOD(zlibUncompress)
    bkInflateInit(&strm);
    bkInflate(&strm, *str, str.length(), &out);
    bkInflateEnd(&strm);
-   info.GetReturnValue().Set(Nan::New(out.c_str(), out.size()).ToLocalChecked());
+   NAN_RETURN(Nan::New(out.c_str(), out.size()).ToLocalChecked());
 }
 
 static NAN_METHOD(unzipFile)
 {
-   HandleScope scope;
-
    NAN_REQUIRE_ARGUMENT_STRING(0, zip);
    NAN_REQUIRE_ARGUMENT_STRING(1, file);
    NAN_OPTIONAL_ARGUMENT_STRING(2, outfile);
 
    if (info.Length() == 3) {
        int rc = bkUnzip::unzip(*zip, *file, *outfile);
-       NAN_RETURN(Local<Integer>::New(Nan::New(rc)));
+       NAN_RETURN(Nan::New(rc));
    }
 
    string out = bkUnzip::toString(*zip, *file);
-   info.GetReturnValue().Set(Local<String>::New(String::New(out.c_str(), out.size())));
+   NAN_RETURN(Nan::New(out.c_str(), out.size()).ToLocalChecked());
 }
 
 static NAN_METHOD(unzip)
@@ -420,7 +356,7 @@ static NAN_METHOD(unzip)
    NAN_REQUIRE_ARGUMENT_STRING(1, dir);
 
    int rc = bkUnzip::unzip(*zip, *dir);
-   info.GetReturnValue().Set(Nan::New(rc));
+   NAN_RETURN(Nan::New(rc));
 }
 
 static NAN_METHOD(strSplit)
@@ -431,7 +367,7 @@ static NAN_METHOD(strSplit)
    NAN_OPTIONAL_ARGUMENT_BOOL(3, empty);
 
    vector<string> list = bkStrSplit(*str, *delim, *quotes, empty);
-   info.GetReturnValue().Set(toArray(list));
+   NAN_RETURN(toArray(list, 0));
 }
 
 static NAN_METHOD(run)
@@ -449,14 +385,11 @@ static NAN_METHOD(run)
        }
        pclose(fp);
    }
-   info.GetReturnValue().Set(Nan::New(out.c_str(), out.size()).ToLocalChecked());
+   NAN_RETURN(Nan::New(out.c_str(), out.size()).ToLocalChecked());
 }
 
-
-void UtilsInit(Handle<Object> target)
+static NAN_MODULE_INIT(UtilsInit)
 {
-    Nan::HandleScope scope;
-
     bkLibInit();
 
     NAN_EXPORT(target, run);

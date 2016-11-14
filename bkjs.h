@@ -23,21 +23,20 @@ using namespace std;
 
 #define NAN_RETURN(x) info.GetReturnValue().Set(x)
 
-#define NAN_REQUIRE_ARGUMENT(i) if (info.Length() <= i || info[i]->IsUndefined()) Nan::ThrowError("Argument " #i " is required");
-#define NAN_REQUIRE_ARGUMENT_STRING(i, var) if (info.Length() <= (i) || !info[i]->IsString()) Nan::ThrowError("Argument " #i " must be a string"); Nan::Utf8String var(info[i]->ToString());
-#define NAN_REQUIRE_ARGUMENT_AS_STRING(i, var) if (info.Length() <= (i)) Nan::ThrowError("Argument " #i " must be a string"); Nan::Utf8String var(info[i]->ToString());
-#define NAN_REQUIRE_ARGUMENT_OBJECT(i, var) if (info.Length() <= (i) || !info[i]->IsObject()) Nan::ThrowError("Argument " #i " must be an object"); Local<Object> var(info[i]->ToObject());
-#define NAN_REQUIRE_ARGUMENT_INT(i, var) if (info.Length() <= (i)) Nan::ThrowError("Argument " #i " must be an integer"); int var = info[i]->Int32Value();
-#define NAN_REQUIRE_ARGUMENT_UINT(i, var) if (info.Length() <= (i)) Nan::ThrowError("Argument " #i " must be an integer"); unsigned int var = info[i]->Int32Value();
-#define NAN_REQUIRE_ARGUMENT_INT64(i, var) if (info.Length() <= (i)) Nan::ThrowError("Argument " #i " must be an integer"); int64_t var = info[i]->NumberValue();
-#define NAN_REQUIRE_ARGUMENT_BOOL(i, var) if (info.Length() <= (i)) Nan::ThrowError("Argument " #i " must be a boolean"); int var = info[i]->BooleanValue();
-#define NAN_REQUIRE_ARGUMENT_NUMBER(i, var) if (info.Length() <= (i)) Nan::ThrowError("Argument " #i " must be a number"); double var = info[i]->NumberValue();
-#define NAN_REQUIRE_ARGUMENT_ARRAY(i, var) if (info.Length() <= (i) || !info[i]->IsArray()) Nan::ThrowError("Argument " #i " must be an array"); Local<Array> var = Local<Array>::Cast(info[i]);
-#define NAN_REQUIRE_ARGUMENT_FUNCTION(i, var) if (info.Length() <= (i) || !info[i]->IsFunction()) Nan::ThrowError("Argument " #i " must be a function"); Local<Function> var = Local<Function>::Cast(info[i]);
+#define NAN_REQUIRE_ARGUMENT(i) if (info.Length() <= i || info[i]->IsUndefined()) {Nan::ThrowError("Argument " #i " is required");return;}
+#define NAN_REQUIRE_ARGUMENT_STRING(i, var) if (info.Length() <= (i) || !info[i]->IsString()) {Nan::ThrowError("Argument " #i " must be a string"); return;} Nan::Utf8String var(info[i]->ToString());
+#define NAN_REQUIRE_ARGUMENT_AS_STRING(i, var) if (info.Length() <= (i)) {Nan::ThrowError("Argument " #i " must be a string"); return;} Nan::Utf8String var(info[i]->ToString());
+#define NAN_REQUIRE_ARGUMENT_OBJECT(i, var) if (info.Length() <= (i) || !info[i]->IsObject()) {Nan::ThrowError("Argument " #i " must be an object"); return;} Local<Object> var(info[i]->ToObject());
+#define NAN_REQUIRE_ARGUMENT_INT(i, var) if (info.Length() <= (i)) {Nan::ThrowError("Argument " #i " must be an integer"); return;} int var = info[i]->Int32Value();
+#define NAN_REQUIRE_ARGUMENT_INT64(i, var) if (info.Length() <= (i)) {Nan::ThrowError("Argument " #i " must be an integer"); return;} int64_t var = info[i]->NumberValue();
+#define NAN_REQUIRE_ARGUMENT_BOOL(i, var) if (info.Length() <= (i)) {Nan::ThrowError("Argument " #i " must be a boolean"); return;} int var = info[i]->Int32Value();
+#define NAN_REQUIRE_ARGUMENT_NUMBER(i, var) if (info.Length() <= (i)) {Nan::ThrowError("Argument " #i " must be a number"); return;} double var = info[i]->NumberValue();
+#define NAN_REQUIRE_ARGUMENT_ARRAY(i, var) if (info.Length() <= (i) || !info[i]->IsArray()) {Nan::ThrowError("Argument " #i " must be an array"); return;} Local<Array> var = Local<Array>::Cast(info[i]);
+#define NAN_REQUIRE_ARGUMENT_FUNCTION(i, var) if (info.Length() <= (i) || !info[i]->IsFunction()) {Nan::ThrowError("Argument " #i " must be a function"); return;} Local<Function> var = Local<Function>::Cast(info[i]);
 
 #define NAN_EXPECT_ARGUMENT_FUNCTION(i, var) Local<Function> var; \
         if (info.Length() > 0 && info.Length() > (i) && !info[(i) >= 0 ? (i) : info.Length() - 1]->IsUndefined()) { \
-            if (!info[(i) >= 0 ? (i) : info.Length() - 1]->IsFunction()) Nan::ThrowError("Argument " #i " must be a function"); \
+            if (!info[(i) >= 0 ? (i) : info.Length() - 1]->IsFunction()) {Nan::ThrowError("Argument " #i " must be a function"); return;} \
             var = Local<Function>::Cast(info[(i) >= 0 ? (i) : info.Length() - 1]); }
 
 #define NAN_OPTIONAL_ARGUMENT_FUNCTION(i, var) Local<Function> var; \
@@ -69,14 +68,42 @@ using namespace std;
 #define NAN_TRY_CATCH_CALL(context, callback, argc, argv) { Nan::TryCatch try_catch; (callback)->Call((context), (argc), (argv)); if (try_catch.HasCaught()) FatalException(try_catch); }
 #define NAN_TRY_CATCH_CALL_RETURN(context, callback, argc, argv, rc) { Nan::TryCatch try_catch; (callback)->Call((context), (argc), (argv)); if (try_catch.HasCaught()) { FatalException(try_catch); return rc; }}
 
-#define NAN_DEFINE_CONSTANT_INTEGER(target, constant, name) (target)->Set(Nan::New(#name).ToLocalChecked(),Nan::New(constant),static_cast<PropertyAttribute>(ReadOnly | DontDelete) );
-#define NAN_DEFINE_CONSTANT_STRING(target, constant, name) (target)->Set(Nan::New(#name).ToLocalChecked(),Nan::New(constant).ToLocalChecked(),static_cast<PropertyAttribute>(ReadOnly | DontDelete));
+#define NAN_DEFINE_CONSTANT_INTEGER(target, constant, name) Nan::ForceSet(target, Nan::New(#name).ToLocalChecked(), Nan::New(constant),static_cast<PropertyAttribute>(ReadOnly | DontDelete) );
+#define NAN_DEFINE_CONSTANT_STRING(target, constant, name) Nan::ForceSet(target, Nan::New(#name).ToLocalChecked(), Nan::New(constant).ToLocalChecked(),static_cast<PropertyAttribute>(ReadOnly | DontDelete));
 
-Local<Value> toArray(vector<string> &list, int numeric = 0);
-Local<Value> toArray(vector<pair<string,string> > &list);
+Local<Value> toArray(vector<string> &list, int numeric)
+{
+    Nan::EscapableHandleScope scope;
+    Local<Array> rc = Nan::New<Array>(list.size());
+    for (uint i = 0; i < list.size(); i++) {
+        switch (numeric) {
+        case 1:
+            rc->Set(Nan::New(i), Nan::New(::atof(list[i].c_str())));
+            break;
 
-Handle<Value> parseJSON(const char* str);
-string stringifyJSON(Local<Value> obj);
+        case 2:
+            rc->Set(Nan::New(i), Nan::New(::atof(list[i].c_str())));
+            break;
+
+        default:
+            rc->Set(Nan::New(i), Nan::New(list[i].c_str()).ToLocalChecked());
+        }
+    }
+    return scope.Escape(rc);
+}
+
+Local<Value> toArray(vector<pair<string,string> > &list)
+{
+    Nan::EscapableHandleScope scope;
+    Local<Array> rc = Nan::New<Array>(list.size());
+    for (uint i = 0; i < list.size(); i++) {
+        Local<Object> obj = Nan::New<Object>();
+        obj->Set(Nan::New("name").ToLocalChecked(), Nan::New(list[i].first.c_str()).ToLocalChecked());
+        obj->Set(Nan::New("value").ToLocalChecked(), Nan::New(list[i].second.c_str()).ToLocalChecked());
+        rc->Set(Nan::New(i), obj);
+    }
+    return scope.Escape(rc);
+}
 
 #endif
 
