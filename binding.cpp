@@ -388,6 +388,15 @@ static NAN_METHOD(run)
    NAN_RETURN(Nan::New(out.c_str(), out.size()).ToLocalChecked());
 }
 
+static NAN_METHOD(getTimeOfDay)
+{
+    timeval t;
+    int r = gettimeofday(&t, NULL);
+    if (r < 0) t.tv_sec = t.tv_usec = 0;
+    info.GetReturnValue().Set(Nan::New<v8::Number>((t.tv_sec * 1000000.0) + t.tv_usec));
+}
+
+
 static NAN_MODULE_INIT(UtilsInit)
 {
     bkLibInit();
@@ -423,6 +432,8 @@ static NAN_MODULE_INIT(UtilsInit)
     NAN_EXPORT(target, initBusy);
     NAN_EXPORT(target, isBusy);
     NAN_EXPORT(target, getBusy);
+
+    NAN_EXPORT(target, getTimeOfDay);
 }
 
 NODE_MODULE(binding, UtilsInit);
