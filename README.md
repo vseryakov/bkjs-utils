@@ -25,8 +25,14 @@
  - `initBusy(ms)` - setup busy monitor to track if incoming requests processing takes longer than given period in milliseconds
  - `isBusy()` - return true if currently request processing takes longer than configured interval
  - `getBusy()` - returns current lag for processing requests
- 
-# Author 
+
+# Notes
+
+For whatever reason npm exits with error `gyp: name 'openssl_fips' is not defined......` run it as
+
+      npm i bkjs-utils --openssl_fips=X
+
+# Author
 
 Vlad Seryakov
 

@@ -239,7 +239,7 @@ static NAN_METHOD(geoDistance)
    double lon1 = info[1]->NumberValue();
    double lat2 = info[2]->NumberValue();
    double lon2 = info[3]->NumberValue();
-   if (isnan(lat1) || isnan(lon1) || isnan(lat2) || isnan(lon2)) return;
+   if (::isnan(lat1) || ::isnan(lon1) || ::isnan(lat2) || ::isnan(lon2)) return;
    if (lat1 == 0 && !isNumber(info[0]->ToString())) return;
    if (lon1 == 0 && !isNumber(info[1]->ToString())) return;
    if (lat2 == 0 && !isNumber(info[2]->ToString())) return;
