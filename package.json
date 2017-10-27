@@ -1,5 +1,5 @@
 {
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": "Vlad Seryakov",
   "name": "bkjs-utils",
   "description": "Utilities for node.js and backendjs",
@@ -19,7 +19,7 @@
     "nan": ">= 2.4.0"
   },
   "engines": {
-    "node": ">= 0.10"
+    "node": ">= 6.0"
   },
   "license": "BSD-3-Clause",
   "gypfile": true,

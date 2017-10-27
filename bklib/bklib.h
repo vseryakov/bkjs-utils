@@ -57,8 +57,6 @@
 #include <arpa/inet.h>
 #include <net/route.h>
 #include <net/ethernet.h>
-#include <resolv.h>
-#include <termios.h>
 #endif
 
 #include <algorithm>
