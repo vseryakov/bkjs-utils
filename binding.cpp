@@ -390,10 +390,21 @@ static NAN_METHOD(run)
 
 static NAN_METHOD(getTimeOfDay)
 {
+    NAN_OPTIONAL_ARGUMENT_INT(0, type);
     timeval t;
     int r = gettimeofday(&t, NULL);
     if (r < 0) t.tv_sec = t.tv_usec = 0;
-    info.GetReturnValue().Set(Nan::New<v8::Number>((t.tv_sec * 1000000.0) + t.tv_usec));
+    if (type == 1) {
+        info.GetReturnValue().Set(Nan::New<v8::Number>(t.tv_sec + (t.tv_usec * 0.000001)));
+    } else
+    if (type == 2) {
+        Local<Object> obj = Nan::New<Object>();
+        obj->Set(Nan::New("tv_sec").ToLocalChecked(), Nan::New<v8::Number>(t.tv_sec));
+        obj->Set(Nan::New("tv_usec").ToLocalChecked(), Nan::New<v8::Number>(t.tv_usec));
+        NAN_RETURN(obj);
+    } else {
+        info.GetReturnValue().Set(Nan::New<v8::Number>((t.tv_sec * 1000000.0) + t.tv_usec));
+    }
 }
 
 

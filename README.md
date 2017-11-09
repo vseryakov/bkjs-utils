@@ -25,6 +25,7 @@
  - `initBusy(ms)` - setup busy monitor to track if incoming requests processing takes longer than given period in milliseconds
  - `isBusy()` - return true if currently request processing takes longer than configured interval
  - `getBusy()` - returns current lag for processing requests
+ - `getTimeOfDay([type])` - return current time in microseconds, if type == 1 returns ad double seconds.microseconds, if type == 2 returns an object { tv_sec: T, tv_usec: U }
 
 # Notes
 
