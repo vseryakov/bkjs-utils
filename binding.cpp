@@ -32,7 +32,7 @@ static void busy_timer(uv_timer_t* handle)
 
 static NAN_METHOD(initBusy)
 {
-    NAN_OPTIONAL_ARGUMENT_INT(0, ms);
+    NAN_OPTIONAL_ARGUMENT_INT(0, ms, 0);
 
     if (ms > 10) HIGH_WATER_MARK_MS = ms;
 
@@ -195,7 +195,7 @@ static NAN_METHOD(geoHashEncode)
 {
    NAN_REQUIRE_ARGUMENT_NUMBER(0, lat);
    NAN_REQUIRE_ARGUMENT_NUMBER(1, lon);
-   NAN_OPTIONAL_ARGUMENT_INT(2, len);
+   NAN_OPTIONAL_ARGUMENT_INT(2, len, 0);
 
    string hash = bkGeoHashEncode(lat, lon, len);
    NAN_RETURN(Nan::New(hash).ToLocalChecked());
@@ -265,7 +265,7 @@ static NAN_METHOD(geoBoundingBox)
 static NAN_METHOD(geoHashGrid)
 {
    NAN_REQUIRE_ARGUMENT_STRING(0, base);
-   NAN_OPTIONAL_ARGUMENT_NUMBER(1, steps);
+   NAN_OPTIONAL_ARGUMENT_NUMBER(1, steps, 0);
    if (steps <= 0) steps = 1;
 
    vector< vector<string> > rc = bkGeoHashGrid(*base, steps);
@@ -281,7 +281,7 @@ static NAN_METHOD(geoHashGrid)
 static NAN_METHOD(geoHashRow)
 {
    NAN_REQUIRE_ARGUMENT_STRING(0, base);
-   NAN_OPTIONAL_ARGUMENT_NUMBER(1, steps);
+   NAN_OPTIONAL_ARGUMENT_NUMBER(1, steps, 0);
    if (steps <= 0) steps = 1;
 
    vector<string> rc = bkGeoHashRow(*base, steps);
@@ -313,7 +313,7 @@ static NAN_METHOD(snappyUncompress)
 static NAN_METHOD(zlibCompress)
 {
    NAN_REQUIRE_ARGUMENT_STRING(0, str);
-   NAN_OPTIONAL_ARGUMENT_INT(1, level);
+   NAN_OPTIONAL_ARGUMENT_INT(1, level, 0);
 
    string out;
    z_stream strm;
@@ -364,7 +364,7 @@ static NAN_METHOD(strSplit)
    NAN_OPTIONAL_ARGUMENT_STRING(0, str);
    NAN_OPTIONAL_ARGUMENT_STRING(1, delim);
    NAN_OPTIONAL_ARGUMENT_STRING(2, quotes);
-   NAN_OPTIONAL_ARGUMENT_BOOL(3, empty);
+   NAN_OPTIONAL_ARGUMENT_BOOL(3, empty, false);
 
    vector<string> list = bkStrSplit(*str, *delim, *quotes, empty);
    NAN_RETURN(toArray(list, 0));
@@ -390,7 +390,7 @@ static NAN_METHOD(run)
 
 static NAN_METHOD(getTimeOfDay)
 {
-    NAN_OPTIONAL_ARGUMENT_INT(0, type);
+    NAN_OPTIONAL_ARGUMENT_INT(0, type, 0);
     timeval t;
     int r = gettimeofday(&t, NULL);
     if (r < 0) t.tv_sec = t.tv_usec = 0;
