@@ -65,18 +65,18 @@ static NAN_METHOD(getUser)
    struct passwd *pw = NULL;
 
    if (info.Length() > 0) {
-       Nan::Utf8String name(info[0]->ToString());
+       Nan::Utf8String name(Nan::To<v8::String>(info[0]).ToLocalChecked());
        pw = getpwnam(*name);
-       if (!pw && bkStrNumeric(*name)) pw = getpwuid(info[0]->ToInteger()->Int32Value());
+       if (!pw && bkStrNumeric(*name)) pw = getpwuid(Nan::To<int32_t>(info[0]).FromJust());
    } else {
        pw = getpwnam(getlogin());
    }
    Local<Object> obj = Nan::New<Object>();
    if (pw) {
-       obj->Set(Nan::New("uid").ToLocalChecked(), Nan::New(pw->pw_uid));
-       obj->Set(Nan::New("gid").ToLocalChecked(), Nan::New(pw->pw_gid));
-       obj->Set(Nan::New("name").ToLocalChecked(), Nan::New(pw->pw_name).ToLocalChecked());
-       obj->Set(Nan::New("dir").ToLocalChecked(), Nan::New(pw->pw_dir).ToLocalChecked());
+       Nan::Set(obj, Nan::New("uid").ToLocalChecked(), Nan::New(pw->pw_uid));
+       Nan::Set(obj, Nan::New("gid").ToLocalChecked(), Nan::New(pw->pw_gid));
+       Nan::Set(obj, Nan::New("name").ToLocalChecked(), Nan::New(pw->pw_name).ToLocalChecked());
+       Nan::Set(obj, Nan::New("dir").ToLocalChecked(), Nan::New(pw->pw_dir).ToLocalChecked());
    }
    NAN_RETURN(obj);
 }
@@ -86,17 +86,17 @@ static NAN_METHOD(getGroup)
    struct group *g = NULL;
 
    if (info.Length() > 0) {
-       Nan::Utf8String name(info[0]->ToString());
+       Nan::Utf8String name(Nan::To<v8::String>(info[0]).ToLocalChecked());
        g = getgrnam(*name);
-       if (!g && bkStrNumeric(*name)) g = getgrgid(info[0]->ToInteger()->Int32Value());
+       if (!g && bkStrNumeric(*name)) g = getgrgid(Nan::To<int32_t>(info[0]).FromJust());
    } else {
        struct passwd *pw = getpwnam(getlogin());
        g = getgrgid(pw ? pw->pw_gid : 0);
    }
    Local<Object> obj = Nan::New<Object>();
    if (g) {
-       obj->Set(Nan::New("gid").ToLocalChecked(), Nan::New(g->gr_gid));
-       obj->Set(Nan::New("name").ToLocalChecked(), Nan::New(g->gr_name).ToLocalChecked());
+       Nan::Set(obj, Nan::New("gid").ToLocalChecked(), Nan::New(g->gr_gid));
+       Nan::Set(obj, Nan::New("name").ToLocalChecked(), Nan::New(g->gr_name).ToLocalChecked());
    }
    NAN_RETURN(obj);
 }
@@ -156,13 +156,13 @@ static NAN_METHOD(countAllWords)
 
     if (!cw->list.size()) {
         for (uint i = 0; i < list->Length(); i++) {
-            Local<Value> val = list->Get(i);
+            Local<Value> val = Nan::Get(list, i).ToLocalChecked();
             if (val->IsString()) {
                 Nan::Utf8String str(val);
                 cw->add(*str);
             } else
             if (val->IsInt32()) {
-                if (!cw->list.empty()) cw->list.back().value = val->Int32Value();
+                if (!cw->list.empty()) cw->list.back().value = Nan::To<int32_t>(val).FromJust();
             }
         }
     }
@@ -175,18 +175,18 @@ static NAN_METHOD(countAllWords)
         if (cw->counters[i]) {
             string w = cw->list[i].word;
             if (cw->list[i].value) w += bkFmtStr("/%d", cw->list[i].value);
-            list->Set(Nan::New(j), Nan::New(w.c_str()).ToLocalChecked());
-            counters->Set(Nan::New(j), Nan::New(cw->counters[i]));
-            values->Set(Nan::New(j++), Nan::New(cw->list[i].value));
+            Nan::Set(list, Nan::New(j), Nan::New(w.c_str()).ToLocalChecked());
+            Nan::Set(counters, Nan::New(j), Nan::New(cw->counters[i]));
+            Nan::Set(values, Nan::New(j++), Nan::New(cw->list[i].value));
         }
     }
     Local<Object> obj = Nan::New<Object>();
-    obj->Set(Nan::New("count").ToLocalChecked(), Nan::New(cw->count));
-    obj->Set(Nan::New("value").ToLocalChecked(), Nan::New(cw->value));
-    obj->Set(Nan::New("mode").ToLocalChecked(), Nan::New(cw->modeName().c_str()).ToLocalChecked());
-    obj->Set(Nan::New("matches").ToLocalChecked(), list);
-    obj->Set(Nan::New("counters").ToLocalChecked(), counters);
-    obj->Set(Nan::New("values").ToLocalChecked(), values);
+    Nan::Set(obj, Nan::New("count").ToLocalChecked(), Nan::New(cw->count));
+    Nan::Set(obj, Nan::New("value").ToLocalChecked(), Nan::New(cw->value));
+    Nan::Set(obj, Nan::New("mode").ToLocalChecked(), Nan::New(cw->modeName().c_str()).ToLocalChecked());
+    Nan::Set(obj, Nan::New("matches").ToLocalChecked(), list);
+    Nan::Set(obj, Nan::New("counters").ToLocalChecked(), counters);
+    Nan::Set(obj, Nan::New("values").ToLocalChecked(), values);
 
     NAN_RETURN(obj);
 }
@@ -208,7 +208,7 @@ static NAN_METHOD(geoHashDecode)
    vector<double> rc = bkGeoHashDecode(*hash);
    Local<Array> result = Nan::New<Array>(rc.size());
    for (uint i = 0; i < rc.size(); i++) {
-       result->Set(Nan::New(i), Nan::New(rc[i]));
+       Nan::Set(result, Nan::New(i), Nan::New(rc[i]));
    }
    NAN_RETURN(result);
 }
@@ -235,15 +235,15 @@ static bool isNumber(Local<Value> arg)
 static NAN_METHOD(geoDistance)
 {
    if (info.Length() < 4) return;
-   double lat1 = info[0]->NumberValue();
-   double lon1 = info[1]->NumberValue();
-   double lat2 = info[2]->NumberValue();
-   double lon2 = info[3]->NumberValue();
+   double lat1 = Nan::To<double>(info[0]).FromJust();
+   double lon1 = Nan::To<double>(info[1]).FromJust();
+   double lat2 = Nan::To<double>(info[2]).FromJust();
+   double lon2 = Nan::To<double>(info[3]).FromJust();
    if (::isnan(lat1) || ::isnan(lon1) || ::isnan(lat2) || ::isnan(lon2)) return;
-   if (lat1 == 0 && !isNumber(info[0]->ToString())) return;
-   if (lon1 == 0 && !isNumber(info[1]->ToString())) return;
-   if (lat2 == 0 && !isNumber(info[2]->ToString())) return;
-   if (lon2 == 0 && !isNumber(info[3]->ToString())) return;
+   if (lat1 == 0 && !isNumber(Nan::To<String>(info[0]).ToLocalChecked())) return;
+   if (lon1 == 0 && !isNumber(Nan::To<String>(info[1]).ToLocalChecked())) return;
+   if (lat2 == 0 && !isNumber(Nan::To<String>(info[2]).ToLocalChecked())) return;
+   if (lon2 == 0 && !isNumber(Nan::To<String>(info[3]).ToLocalChecked())) return;
 
    info.GetReturnValue().Set(Nan::New(bkDistance(lat1, lon1, lat2, lon2)));
 }
@@ -257,7 +257,7 @@ static NAN_METHOD(geoBoundingBox)
    vector<double> rc = bkBoundingBox(lat1, lon1, distance);
    Local<Array> result = Nan::New<Array>(rc.size());
    for (uint i = 0; i < rc.size(); i++) {
-       result->Set(Nan::New(i), Nan::New(rc[i]));
+       Nan::Set(result, Nan::New(i), Nan::New(rc[i]));
    }
    NAN_RETURN(result);
 }
@@ -272,7 +272,7 @@ static NAN_METHOD(geoHashGrid)
    Local<Array> result = Nan::New<Array>();
    for (uint j = 0, n = 0; j < rc[0].size(); j++) {
        for (uint i = 0; i < rc.size(); i++) {
-           result->Set(Nan::New(n++), Nan::New(rc[i][j]).ToLocalChecked());
+           Nan::Set(result, Nan::New(n++), Nan::New(rc[i][j]).ToLocalChecked());
        }
    }
    NAN_RETURN(result);
@@ -287,7 +287,7 @@ static NAN_METHOD(geoHashRow)
    vector<string> rc = bkGeoHashRow(*base, steps);
    Local<Array> result = Nan::New<Array>(rc.size());
    for (uint i = 0; i < rc.size(); i++) {
-       result->Set(Nan::New(i), Nan::New(rc[i]).ToLocalChecked());
+       Nan::Set(result, Nan::New(i), Nan::New(rc[i]).ToLocalChecked());
    }
    NAN_RETURN(result);
 }
@@ -399,8 +399,8 @@ static NAN_METHOD(getTimeOfDay)
     } else
     if (type == 2) {
         Local<Object> obj = Nan::New<Object>();
-        obj->Set(Nan::New("tv_sec").ToLocalChecked(), Nan::New<v8::Number>(t.tv_sec));
-        obj->Set(Nan::New("tv_usec").ToLocalChecked(), Nan::New<v8::Number>(t.tv_usec));
+        Nan::Set(obj, Nan::New("tv_sec").ToLocalChecked(), Nan::New<v8::Number>(t.tv_sec));
+        Nan::Set(obj, Nan::New("tv_usec").ToLocalChecked(), Nan::New<v8::Number>(t.tv_usec));
         NAN_RETURN(obj);
     } else {
         info.GetReturnValue().Set(Nan::New<v8::Number>((t.tv_sec * 1000000.0) + t.tv_usec));
