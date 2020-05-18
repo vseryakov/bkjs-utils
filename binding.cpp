@@ -359,6 +359,21 @@ static NAN_METHOD(unzip)
    NAN_RETURN(Nan::New(rc));
 }
 
+static NAN_METHOD(zipFiles)
+{
+   NAN_REQUIRE_ARGUMENT_STRING(0, zip);
+
+   vector<pair<string,int> > list = bkUnzip::get_files(*zip);
+   Local<Array> result = Nan::New<Array>(list.size());
+   for (uint i = 0; i < list.size(); i++) {
+        Local<Object> obj = Nan::New<Object>();
+        Nan::Set(obj, Nan::New("file").ToLocalChecked(), Nan::New(list[i].first.c_str()).ToLocalChecked());
+        Nan::Set(obj, Nan::New("size").ToLocalChecked(), Nan::New(list[i].second));
+        Nan::Set(result, Nan::New(i), obj);
+   }
+   NAN_RETURN(result);
+}
+
 static NAN_METHOD(strSplit)
 {
    NAN_OPTIONAL_ARGUMENT_STRING(0, str);
@@ -437,6 +452,7 @@ static NAN_MODULE_INIT(UtilsInit)
     NAN_EXPORT(target, geoHashGrid);
     NAN_EXPORT(target, geoHashRow);
 
+    NAN_EXPORT(target, zipFiles);
     NAN_EXPORT(target, unzipFile);
     NAN_EXPORT(target, unzip);
 

@@ -1071,3 +1071,30 @@ string bkUnzip::toString(string zipfile, string filename)
     return out;
 }
 
+vector<pair<string,int> > bkUnzip::get_files(string zipfile)
+{
+    vector<pair<string,int> > rc;
+    bkUnzip unzip(zipfile);
+
+    if (!unzip.open()) {
+        LogError("Can not open file '%s'", zipfile.c_str());
+        return rc;
+    }
+ 
+    while (1) {
+        if (!unzip.open_file()) {
+            LogError("%s: cannot open file", zipfile.c_str());
+            break;;
+        }
+
+        rc.push_back(std::make_pair(unzip.get_file_name(), unzip.get_file_size()));
+        unzip.close_file();
+
+        if (!unzip.next_file()) {
+            break;
+        }
+    }
+    return rc;
+}
+
+

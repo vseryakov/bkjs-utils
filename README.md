@@ -11,6 +11,7 @@
  - `zlibUncompress(str)` - decompress a string
  - `unzip(zipfile, outdir)` - extract a zip archive into directory
  - `unzipFile(zipfile, file [, outfile])` - extract a file from zip archive, return contents if no outfile s specified
+ - `zipFiles(zipfile)` - return a slist of all files in the zip archive
  - `run(command, callback)` - run shell command and return all output to the callback
  - `getUser([user])` - return an object with user info from the /etc/passwd file, user can be uid or name
  - `getGroup([group])` - return an object with specified group info for the current user of for the given group id or name

@@ -59,6 +59,9 @@ public:
     // Return file mode attributes, for chmod
     int get_file_mode();
 
+    // Return a list of all files with sizes
+    static vector<pair<string,int> > get_files(string zipfile);
+
     // Safely unzip file from the archive, store in temp file and then rename
     static int unzip(string zipfile, string filename, string outfile);
 
