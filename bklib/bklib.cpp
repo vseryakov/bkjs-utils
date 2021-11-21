@@ -1079,13 +1079,13 @@ bkJsonValue *bkJsonParse(const char *source, int size, string *errmsg)
     return root;
 }
 
-void jsonFree(bkJsonValue *root)
+void bkJsonFree(bkJsonValue *root)
 {
     if (!root) return;
     switch(root->type) {
     case JSON_OBJECT:
     case JSON_ARRAY:
-        for (bkJsonValue *it = root->first; it; it = it->next) jsonFree(it);
+        for (bkJsonValue *it = root->first; it; it = it->next) bkJsonFree(it);
 
     default:
         delete root;
@@ -1217,7 +1217,7 @@ bool bkJsonSet(bkJsonValue *root, bkJsonValue *val)
         bkJsonAppend(root, val);
     } else {
         old->value = val->value;
-        jsonFree(val);
+        bkJsonFree(val);
     }
     return true;
 }
