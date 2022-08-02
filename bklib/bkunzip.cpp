@@ -28,7 +28,7 @@ static int _decrypt_byte(unsigned long *pkeys, const z_crc_t *pcrc_32_tab)
 
 static int _update_keys(unsigned long *pkeys, const z_crc_t *pcrc_32_tab, int c)
 {
-    register int keyshift;
+    int keyshift;
 
     (*(pkeys + 0)) = CRC32((*(pkeys + 0)), c);
     (*(pkeys + 1)) += (*(pkeys + 0)) & 0xff;
